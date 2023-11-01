@@ -21,7 +21,7 @@ jobs:
                 echo "PV=${PV}" >> $GITHUB_ENV
                 echo "P=${PN}-${PV}" >> $GITHUB_ENV
                 echo "TAG=${TAG}" >> $GITHUB_ENV
-                echo "$msg" >> $GITHUB_OUTPUT
+                echo "$msg"
             
             - name: checkout target repo
               uses: actions/checkout@v3
