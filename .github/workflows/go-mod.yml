@@ -1,0 +1,49 @@
+name: "go-mod tarballs"
+on: workflow_dispatch
+
+jobs:
+    gomod:
+        permissions: write-all
+        runs-on: unbuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                fetch-depth: 0
+
+            - name: read pkg config
+              run: |
+                set -xe
+                msg=$(git log -1 --pretty=%s) # commit msg as ${P}-${PV}
+                source "${GITHUB_WORKSPACE}/${msg}"
+                echo "REPO=$REPO" >> $GITHUB_ENV
+                echo "PN=$PN" >> $GITHUB_ENV
+                echo "PV=$PV" >> $GITHUB_ENV
+                echo "TAG=$TAG" >> $GITHUB_ENV
+                echo "$msg" >> $GITHUB_OUTPUT
+            
+            - name: checkout target repo
+              uses: actions/checkout@v3
+              with:
+                repository: ${REPO}
+                ref: ${TAG}
+                fetch-depth: 0
+                path: "input"
+
+            - name: gomodcache
+              run: |
+                P=$PN-$PV
+                cd input
+                GOMODCACHE="${PWD}"/go-mod go mod download -modcacherw
+                XZ_OPT='-T0 -9' tar -acf /tmp/${P}-deps.tar.xz go-mod
+                rm -rf go-mod
+                go mod vendor
+                XZ_OPT='-T0 -9' tar -acf /tmp/${P}-vendor.tar.xz vendor
+
+            - name: upload goland deps to release artifaces
+              uses: softprops/action-gh-release@v1
+              with:
+                files: |
+                  /tmp/${P}-deps.tar.xz
+                  /tmp/${P}-vendor.tar.xz
+                tag_name: ${PN}
