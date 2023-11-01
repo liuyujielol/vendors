@@ -44,12 +44,9 @@ jobs:
                 XZ_OPT='-T0 -9' tar -acf "/tmp/${P}-vendor.tar.xz" vendor
 
             - name: upload goland deps to release artifaces
-              env:
-                P: ${{ env.P }}
-                PN: ${{ env.PN }}
               uses: softprops/action-gh-release@v1
               with:
                 files: |
-                  /tmp/${P}-deps.tar.xz
-                  /tmp/${P}-vendor.tar.xz
-                tag_name: ${PN}
+                  /tmp/${{ env.P }}-deps.tar.xz
+                  /tmp/${{ env.P }}-vendor.tar.xz
+                tag_name: ${{ env.PN }}
