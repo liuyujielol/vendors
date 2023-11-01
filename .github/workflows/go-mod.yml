@@ -4,7 +4,7 @@ on: workflow_dispatch
 jobs:
     go-mod:
         permissions: write-all
-        runs-on: unbuntu-latest
+        runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v3
@@ -21,18 +21,20 @@ jobs:
                 echo "PV=${PV}" >> $GITHUB_ENV
                 echo "P=${PN}-${PV}" >> $GITHUB_ENV
                 echo "TAG=${TAG}" >> $GITHUB_ENV
-                echo "$msg" >> $GITHUB_OUTPUT
+                echo "$msg"
             
             - name: checkout target repo
               uses: actions/checkout@v3
               with:
-                repository: ${REPO}
-                ref: ${TAG}
+                repository: ${{ env.REPO }}
+                ref: ${{ env.TAG }}
                 fetch-depth: 0
-                path: "${P}"
+                path: "${{ env.P }}"
 
             - name: gomod tarballs
               run: |
+                set -xe
+                P="${{ env.P }}"
                 cd "${P}"
                 GOMODCACHE="${PWD}"/go-mod go mod download -modcacherw
                 XZ_OPT='-T0 -9' tar -acf "/tmp/${P}-deps.tar.xz" go-mod
