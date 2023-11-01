@@ -1,8 +1,8 @@
-name: "go-mod tarballs"
+name: "go-mod"
 on: workflow_dispatch
 
 jobs:
-    gomod:
+    go-mod:
         permissions: write-all
         runs-on: unbuntu-latest
         steps:
@@ -16,10 +16,11 @@ jobs:
                 set -xe
                 msg=$(git log -1 --pretty=%s) # commit msg as ${P}-${PV}
                 source "${GITHUB_WORKSPACE}/${msg}"
-                echo "REPO=$REPO" >> $GITHUB_ENV
-                echo "PN=$PN" >> $GITHUB_ENV
-                echo "PV=$PV" >> $GITHUB_ENV
-                echo "TAG=$TAG" >> $GITHUB_ENV
+                echo "REPO=${REPO}" >> $GITHUB_ENV
+                echo "PN=${PN}" >> $GITHUB_ENV
+                echo "PV=${PV}" >> $GITHUB_ENV
+                echo "P=${PN}-${PV}" >> $GITHUB_ENV
+                echo "TAG=${TAG}" >> $GITHUB_ENV
                 echo "$msg" >> $GITHUB_OUTPUT
             
             - name: checkout target repo
@@ -28,17 +29,16 @@ jobs:
                 repository: ${REPO}
                 ref: ${TAG}
                 fetch-depth: 0
-                path: "input"
+                path: "${P}"
 
-            - name: gomodcache
+            - name: gomod tarballs
               run: |
-                P=$PN-$PV
-                cd input
+                cd "${P}"
                 GOMODCACHE="${PWD}"/go-mod go mod download -modcacherw
-                XZ_OPT='-T0 -9' tar -acf /tmp/${P}-deps.tar.xz go-mod
+                XZ_OPT='-T0 -9' tar -acf "/tmp/${P}-deps.tar.xz" go-mod
                 rm -rf go-mod
                 go mod vendor
-                XZ_OPT='-T0 -9' tar -acf /tmp/${P}-vendor.tar.xz vendor
+                XZ_OPT='-T0 -9' tar -acf "/tmp/${P}-vendor.tar.xz" vendor
 
             - name: upload goland deps to release artifaces
               uses: softprops/action-gh-release@v1
